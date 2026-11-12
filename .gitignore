@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env*
+# Boletins e listas reais nunca entram no repositório (dados de alunos); fixtures são sintéticas
+*.xlsx
+*.pdf
+test-results/
+playwright-report/
+*.zip
