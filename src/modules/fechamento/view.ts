@@ -3,6 +3,8 @@ import { interpretarBoletim, pareceBoletim } from '../../core/boletim';
 import { gerarCsv, gerarTexto, gerarXlsx, nomeArquivo, type Contexto } from '../../core/exportar';
 import { calcularFechamento, conferir, pendenciasPorDisciplina, type Divergencia, type Pendencia, type Resultado } from '../../core/fechamento';
 import { chave, formatarNota } from '../../core/normalizar';
+import { gerarRelatorioPdf } from '../../core/relatorio-pdf';
+import { CABECALHO_PADRAO, montarRelatorios } from '../../core/relatorios';
 import { SITUACOES_ALVO, type Aviso, type Boletim, type ListaAtivos, type SituacaoAlvo } from '../../core/types';
 import { extrairTextoPdf } from './pdf';
 
@@ -24,6 +26,8 @@ interface Arquivos {
 
 const SLOTS: Slot[] = ['boletim', 'ativos'];
 const CHAVE_VISAO = 'fechamento.visao';
+/** Cabeçalho dos PDFs dos professores, salvo por turma. */
+const CHAVE_CABECALHO = 'fechamento.cabecalho.';
 const TAMANHO_MAXIMO = 20 * 1024 * 1024;
 
 export function iniciarFechamento(raiz: HTMLElement): void {
@@ -52,7 +56,14 @@ export function iniciarFechamento(raiz: HTMLElement): void {
   const listaDivergencias = $('#lista-divergencias');
   const barraExportar = $('#barra-exportar');
   const hintExportar = $('#hint-exportar');
-  const botoesExportar = [$<HTMLButtonElement>('#exportar-xlsx'), $<HTMLButtonElement>('#exportar-csv'), $<HTMLButtonElement>('#copiar-texto')];
+  const passoPdfs = $('#passo-pdfs');
+  const cabecalhoPdf = $<HTMLTextAreaElement>('#cabecalho-pdf');
+  const desistentesAntes = $<HTMLInputElement>('#desistentes-antes');
+  const desistentesDurante = $<HTMLInputElement>('#desistentes-durante');
+  const botaoPdfs = $<HTMLButtonElement>('#baixar-pdfs');
+  /** Turma cujo cabeçalho está no campo; troca quando chega um boletim de outra turma. */
+  let turmaDoCabecalho: string | null | undefined;
+  const botoesExportar = [botaoPdfs, $<HTMLButtonElement>('#exportar-xlsx'), $<HTMLButtonElement>('#exportar-csv'), $<HTMLButtonElement>('#copiar-texto')];
 
   void chrome.storage?.local.get(CHAVE_VISAO).then((r) => {
     if (r[CHAVE_VISAO] === 'disciplina' || r[CHAVE_VISAO] === 'aluno') {
@@ -210,7 +221,9 @@ export function iniciarFechamento(raiz: HTMLElement): void {
     const mostrar = dados !== null && !bloqueado;
     passoDisciplinas.hidden = !mostrar;
     passoResultado.hidden = !mostrar;
+    passoPdfs.hidden = !mostrar;
     barraExportar.hidden = !mostrar;
+    if (mostrar && dados) carregarCabecalho(dados.boletim);
     if (mostrar) renderDisciplinas();
     renderResultado();
   }
@@ -465,6 +478,71 @@ export function iniciarFechamento(raiz: HTMLElement): void {
       }),
     );
   }
+
+  // ---------- PDFs dos professores ----------
+
+  function cabecalhoPadrao(boletim: Boletim): string {
+    return [...CABECALHO_PADRAO, boletim.curso ?? ''].filter(Boolean).join('\n');
+  }
+
+  function carregarCabecalho(boletim: Boletim): void {
+    const turma = boletim.turma;
+    if (turma === turmaDoCabecalho) return;
+    turmaDoCabecalho = turma;
+    cabecalhoPdf.value = cabecalhoPadrao(boletim);
+    desistentesAntes.value = '0';
+    desistentesDurante.value = '0';
+    if (!turma) return;
+    const k = CHAVE_CABECALHO + turma;
+    void chrome.storage?.local.get(k).then((r) => {
+      if (turmaDoCabecalho === turma && typeof r[k] === 'string' && r[k].trim()) cabecalhoPdf.value = r[k];
+    });
+  }
+
+  cabecalhoPdf.addEventListener('input', () => {
+    if (turmaDoCabecalho) void chrome.storage?.local.set({ [CHAVE_CABECALHO + turmaDoCabecalho]: cabecalhoPdf.value });
+  });
+
+  function inteiro(input: HTMLInputElement): number {
+    const n = Math.floor(Number(input.value));
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+
+  let logo: Promise<Uint8Array | null> | null = null;
+  function carregarLogo(): Promise<Uint8Array | null> {
+    logo ??= fetch(chrome.runtime.getURL('img/logo-proz.png'))
+      .then(async (r) => (r.ok ? new Uint8Array(await r.arrayBuffer()) : null))
+      .catch(() => null);
+    return logo;
+  }
+
+  botaoPdfs.addEventListener('click', async () => {
+    const dados = prontos();
+    const ctx = contexto();
+    if (!dados || !ctx || ctx.disciplinas.length === 0) return;
+    botaoPdfs.disabled = true;
+    try {
+      // Sempre as três situações, independentemente do filtro da tela.
+      const completo = calcularFechamento(dados.boletim, dados.ativos, ctx.disciplinas);
+      const linhas = cabecalhoPdf.value.split(/\r?\n/);
+      const relatorios = montarRelatorios(completo, ctx.turma, {
+        linhas,
+        desistentesAntes: inteiro(desistentesAntes),
+        desistentesDurante: inteiro(desistentesDurante),
+      });
+      const imagem = await carregarLogo();
+      for (const r of relatorios) {
+        baixar(new Uint8Array(await gerarRelatorioPdf(r, linhas, imagem)), 'application/pdf', r.arquivo);
+        // Um intervalo curto entre os downloads evita que o Chrome descarte algum.
+        await new Promise((ok) => setTimeout(ok, 300));
+      }
+      avisar(`Baixados: ${relatorios.map((r) => r.arquivo.replace(/\.pdf$/i, '').split(' - ')[0]).join(', ')}.`);
+    } catch {
+      avisar('Não consegui gerar os PDFs. Tente de novo.', false);
+    } finally {
+      botaoPdfs.disabled = false;
+    }
+  });
 
   // ---------- Exportar ----------
 

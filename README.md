@@ -99,17 +99,32 @@ O resultado atualiza na hora, a cada disciplina marcada.
 
 - **Por aluno:** cada aluno com todas as pendências dele nas disciplinas marcadas. É o formato para avisar o aluno.
 - **Por disciplina:** cada disciplina com a lista de alunos. É o formato para conversar com o professor.
-- **Etiquetas de situação:** clique em *Recuperação*, *Reclassificação* ou *Reprovado* para esconder ou mostrar aquela situação. As exportações seguem o que está na tela.
+- **Etiquetas de situação:** clique em *Recuperação*, *Reclassificação* ou *Reprovado* para esconder ou mostrar aquela situação. O Excel, o CSV e o texto seguem o que está na tela; os PDFs dos professores trazem sempre as três.
 
 Cada linha mostra a nota final e as faltas (ex.: `nota 7,0 · 20 faltas acima do limite`).
 
 No fim do resultado, **Divergências com o sistema** (fechado por padrão) lista os casos em que a situação calculada pelas regras é diferente do *Resultado* que o sistema escreveu no boletim, com o motivo, para quem quiser conferir.
 
-### 4. Exportar
+### 4. PDFs para os professores
+
+O botão **Baixar os 3 PDFs** gera, de uma vez, os arquivos que vão para os professores, no layout dos modelos da secretaria (logo, cabeçalho, título em roxo, um bloco por aluno e o relatório de totais):
+
+| Arquivo | Conteúdo |
+|---|---|
+| `REPROVADOS - <turma>.pdf` | "Disciplina – Reprovado por notas e faltas" (nota abaixo de 6 com faltas acima do limite) ou "– Reprovado por notas"; totais de reprovados por notas e faltas, por notas e de desistentes |
+| `RECUPERAÇÃO - <turma>.pdf` | "Disciplina – Reprovado por notas"; total de alunos em recuperação |
+| `RECLASSIFICAÇÃO - <turma>.pdf` | "Disciplina – Reprovado por faltas"; total de alunos em reclassificação |
+
+- Os PDFs trazem sempre as três situações, mesmo as escondidas pelas etiquetas da tela.
+- **Cabeçalho:** uma linha do PDF por linha do campo. Vem preenchido com a unidade, "RESULTADOS FINAIS" e o curso do boletim; o que você editar fica salvo para a turma.
+- **Desistentes** (antes do início e durante o módulo) não estão no boletim: preencha os números, que saem no relatório de reprovados.
+- Os totais contam alunos, não disciplinas: quem foi reprovado por notas e faltas numa disciplina e só por notas em outra conta nos dois totais, como nos modelos.
+
+### 5. Outras exportações
 
 | Botão | O que gera |
 |---|---|
-| **Exportar Excel** | `fechamento_<turma>_<data>.xlsx` com as abas *Fechamento* (uma linha por pendência, com filtro), *Divergências* e *Resumo* (regras usadas e totais) |
+| **Excel** | `fechamento_<turma>_<data>.xlsx` com as abas *Fechamento* (uma linha por pendência, com filtro), *Divergências* e *Resumo* (regras usadas e totais) |
 | **CSV** | `fechamento_<turma>_<data>.csv` separado por `;`, com vírgula decimal, que abre direto no Excel em português |
 | **Copiar texto** | Texto agrupado por aluno, para colar no WhatsApp ou no e-mail |
 
@@ -243,6 +258,8 @@ src/
     regras.ts            nota × faltas × provas feitas → situação
     fechamento.ts        conferência, regras por aluno, divergências com o sistema
     exportar.ts          xlsx, csv e texto
+    relatorios.ts        conteúdo dos 3 PDFs dos professores (textos e totais)
+    relatorio-pdf.ts     desenho desses PDFs com pdf-lib (layout dos modelos)
   modules/
     fechamento/
       view.ts            tela do módulo (estado, eventos, renderização)

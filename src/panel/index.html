@@ -104,11 +104,32 @@
             <ul id="lista-divergencias"></ul>
           </details>
         </section>
+
+        <section id="passo-pdfs" class="card step" aria-labelledby="titulo-pdfs" hidden>
+          <h2 id="titulo-pdfs"><span class="step-n">4</span>PDFs para os professores</h2>
+          <p class="muted">Gera os 3 arquivos (Reprovados, Recuperação e Reclassificação) com todas as situações, mesmo as escondidas no filtro acima.</p>
+          <label class="campo" for="cabecalho-pdf">
+            <span>Cabeçalho (uma linha por linha do PDF)</span>
+            <textarea id="cabecalho-pdf" class="busca" rows="4" spellcheck="false"></textarea>
+          </label>
+          <p class="muted">Fica salvo para esta turma.</p>
+          <div class="campos-linha">
+            <label class="campo" for="desistentes-antes">
+              <span>Desistentes antes do início</span>
+              <input id="desistentes-antes" class="busca" type="number" min="0" step="1" value="0" />
+            </label>
+            <label class="campo" for="desistentes-durante">
+              <span>Desistentes durante</span>
+              <input id="desistentes-durante" class="busca" type="number" min="0" step="1" value="0" />
+            </label>
+          </div>
+        </section>
       </main>
 
       <div id="barra-exportar" class="start-bar" hidden>
+        <button id="baixar-pdfs" class="button primary" type="button">Baixar os 3 PDFs</button>
         <div class="export-row">
-          <button id="exportar-xlsx" class="button primary" type="button">Exportar Excel</button>
+          <button id="exportar-xlsx" class="button" type="button">Excel</button>
           <button id="exportar-csv" class="button" type="button">CSV</button>
           <button id="copiar-texto" class="button" type="button">Copiar texto</button>
         </div>

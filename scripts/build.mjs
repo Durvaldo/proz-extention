@@ -24,5 +24,7 @@ cpSync('src/panel/panel.css', `${outdir}/panel/panel.css`);
 // O pdf.js lê o PDF num worker; o arquivo precisa estar dentro da extensão (CSP não permite CDN).
 cpSync('node_modules/pdfjs-dist/build/pdf.worker.min.mjs', `${outdir}/panel/pdf.worker.min.mjs`);
 cpSync('src/assets/icons', `${outdir}/icons`, { recursive: true });
+// Logo dos PDFs dos professores.
+cpSync('src/assets/img', `${outdir}/img`, { recursive: true });
 
 console.log(`Build gerado em ${outdir}/`);

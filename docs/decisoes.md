@@ -30,10 +30,22 @@ Divergências entre regra e sistema ficam listadas no fim do resultado e na aba 
 
 *Em Fechamento* passa pelas regras: é exatamente o momento do fechamento (a disciplina terminou e o sistema ainda não deu o resultado), e por isso não conta como divergência. *Cursando* fica fora das regras, com aviso: a disciplina ainda não terminou para o aluno.
 
+## 2026-11-12 — PDFs para os professores
+
+A secretaria mandava aos professores três documentos montados à mão no Word (Reprovados, Recuperação e Reclassificação). A extensão passou a gerá-los com um botão, no mesmo layout:
+
+- **Medidas tiradas dos PDFs originais:** A4, logo centralizado no topo, cabeçalho em 14 pt, título em 23 pt e textos das disciplinas na cor roxa do modelo (`#7030A0`), relatório de totais em 12 pt com a parte sublinhada. O logo saiu do próprio PDF modelo (PNG com transparência, em `src/assets/img`).
+- **Fonte Helvetica** (padrão do PDF, sem embutir arquivo de fonte). Os modelos usam Calibri, que não pode ser distribuída.
+- **pdf-lib** desenha os arquivos no navegador; nada sai do computador.
+- **Textos iguais aos modelos**, inclusive "Reprovado por notas" no relatório de recuperação e "Reprovado por faltas" no de reclassificação. No de reprovados, "por notas e faltas" quando as faltas estão acima do limite (asterisco) e a reclassificação não foi feita.
+- **Totais contam alunos.** Um aluno reprovado por notas e faltas numa disciplina e só por notas em outra entra nos dois totais, como no modelo (2 e 5 numa turma com 6 alunos reprovados).
+- **Os três arquivos saem sempre**, mesmo vazios (total 00), e com as três situações, independentemente do filtro da tela.
+- **Cabeçalho editável e salvo por turma:** o boletim não traz o nome do grupo/programa (ex.: "TRILHAS DE FUTURO V") nem a forma abreviada do curso. Desistentes também não estão no boletim e são digitados (não ficam salvos).
+
 ## Outras
 
 - **Uma turma por vez.** Se o boletim e a lista de ativos forem de turmas diferentes, o fechamento é bloqueado.
-- **Exportação:** Excel (abas Fechamento, Divergências e Resumo), CSV (`;` e vírgula decimal, com BOM, que o Excel em português abre direto) e texto agrupado por aluno. Modelo de mensagem fica para depois.
+- **Exportação:** os 3 PDFs dos professores (botão principal), Excel (abas Fechamento, Divergências e Resumo), CSV (`;` e vírgula decimal, com BOM, que o Excel em português abre direto) e texto agrupado por aluno. Modelo de mensagem fica para depois.
 - **Não guardar a seleção de disciplinas** entre usos. As disciplinas mudam a cada mês, e uma seleção antiga carregada sozinha pode passar despercebida. Só a visão (por aluno / por disciplina) é lembrada.
 - **Sem `host_permissions`.** Este módulo não acessa nenhum site. Permissões: `sidePanel`, `storage`, `clipboardWrite`.
 - Base copiada do SSG: tema (tokens de `panel.css`), esbuild, Vitest, Playwright e versões das dependências. O pdf.js (`pdfjs-dist` 6.4.299) foi adicionado e o worker vai junto no `dist/`, porque a CSP de extensão não permite carregar de CDN.

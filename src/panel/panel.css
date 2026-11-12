@@ -708,8 +708,33 @@ main {
 
 .export-row {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1.2fr;
+  grid-template-columns: 1fr 1fr 1.2fr;
   gap: 7px;
+}
+
+/* PDFs dos professores */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.campo .busca {
+  font-weight: 400;
+}
+
+textarea.busca {
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.campos-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 .hint {

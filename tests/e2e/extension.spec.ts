@@ -88,6 +88,15 @@ test('fluxo completo: dois PDFs, disciplinas, resultado e exportação', async (
   await expect(panel.locator('#resultado')).not.toContainText('Reprovado');
   await panel.locator('.filtro', { hasText: 'Reprovado' }).click();
 
+  // PDFs dos professores: três downloads, com o cabeçalho padrão vindo do boletim.
+  await expect(panel.locator('#cabecalho-pdf')).toHaveValue(/RESULTADOS FINAIS/);
+  const pdfs: string[] = [];
+  panel.on('download', (d) => pdfs.push(d.suggestedFilename()));
+  await panel.locator('#baixar-pdfs').click();
+  await expect(panel.locator('#hint-exportar')).toContainText('Baixados');
+  await expect.poll(() => pdfs).toEqual(['REPROVADOS - TTESTE01.pdf', 'RECUPERAÇÃO - TTESTE01.pdf', 'RECLASSIFICAÇÃO - TTESTE01.pdf']);
+  panel.removeAllListeners('download');
+
   // Exportar Excel
   const [download] = await Promise.all([panel.waitForEvent('download'), panel.locator('#exportar-xlsx').click()]);
   expect(download.suggestedFilename()).toMatch(/^fechamento_TTESTE01_\d{4}-\d{2}-\d{2}\.xlsx$/);
